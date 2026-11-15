@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="AI Translator — Chrome 浏览器 AI 翻译插件。全页翻译、划词翻译、网页总结，兼容 OpenAI 协议。"
+      content="AI Translator — Chrome 浏览器 AI 翻译插件。全页翻译、双语对照、划词翻译、网页总结，兼容 OpenAI 协议。"
     />
     <title>AI Translator — 让网页用你的语言说话</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -45,8 +45,8 @@
               <span class="hero-accent">用你的语言说话</span>
             </h1>
             <p class="hero-lead">
-              Chrome 端 AI 翻译插件：全页翻译、划词即译、网页总结。兼容 OpenAI
-              协议，密钥与接口由你掌控。
+              Chrome 端 AI 翻译插件：全页翻译、双语对照、划词即译、网页总结。兼容
+              OpenAI 协议，密钥与接口由你掌控。
             </p>
             <div class="hero-cta">
               <a class="btn" href="#install">安装扩展</a>
@@ -67,6 +67,7 @@
                 <p class="line line-zh">
                   人工智能正在重塑我们阅读网页的方式。
                 </p>
+                <div class="mode-chip">双语对照</div>
                 <div class="select-pop">
                   <span class="select-label">划词翻译</span>
                   <span class="select-text" data-swap>reshaping → 重塑</span>
@@ -82,7 +83,7 @@
           <h2 class="section-title">为双语阅读而生</h2>
           <p class="intro-text">
             AI Translator
-            把翻译能力嵌进浏览流：不必复制到别处，不必切换标签页。选中即译，整页可换，长文可先看总结。接口遵循
+            把翻译能力嵌进浏览流：不必复制到别处，不必切换标签页。选中即译，整页可换，也可以原文与译文并排对照；长文可先看总结。接口遵循
             OpenAI Chat Completions，可对接 DeepSeek 等兼容服务。
           </p>
           <ul class="intro-points">
@@ -98,6 +99,10 @@
               <strong>管理面板</strong>
               <span>历史记录与 Token 消耗一目了然。</span>
             </li>
+            <li>
+              <strong>双语对照</strong>
+              <span>保留原文，译文紧随其下，可随时切回覆盖翻译。</span>
+            </li>
           </ul>
         </div>
       </section>
@@ -106,7 +111,7 @@
         <div class="wrap">
           <header class="features-head">
             <h2 class="section-title">核心功能</h2>
-            <p class="section-lead">三件事，覆盖日常浏览的翻译需求。</p>
+            <p class="section-lead">四项能力，覆盖日常浏览的翻译需求。</p>
           </header>
         </div>
 
@@ -129,6 +134,30 @@
                   <span class="w50"></span>
                 </div>
                 <div class="mock-badge">已翻译</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature feature-d reveal">
+          <div class="wrap feature-inner">
+            <div class="feature-copy">
+              <p class="feature-kicker">双语对照</p>
+              <h3>原文与译文，并排读完一句</h3>
+              <p>
+                对照模式保留原文，在句中下方显示译文，适合学习与术语核对。已翻译的页面可在覆盖与对照之间原地切换，无需重新调用接口。
+              </p>
+            </div>
+            <div class="feature-visual" aria-hidden="true">
+              <div class="mock-bilingual">
+                <p class="bi-src">
+                  Readers benefit from seeing the source and the target side by side.
+                </p>
+                <p class="bi-dst">
+                  读者能从原文与译文的并排呈现中受益。
+                </p>
+                <p class="bi-src">Links and lists stay usable.</p>
+                <p class="bi-dst">链接与列表依然可用。</p>
               </div>
             </div>
           </div>
@@ -218,10 +247,13 @@
               <span class="step-num" aria-hidden="true">4</span>
               <div>
                 <h3>填写 API 并开始翻译</h3>
-                <p>
-                  打开管理面板，配置 API Key、Base URL
-                  与模型；之后即可全页翻译、划词或总结。
-                </p>
+              <p>
+                打开管理面板，配置 API Key、Base URL
+                与模型；之后即可全页翻译、双语对照、划词或总结。
+              </p>
+              <p class="step-sub">
+                翻译方式在弹窗或管理面板里切换：覆盖翻译，或双语对照（原文保留、译文在下）。
+              </p>
               </div>
             </li>
           </ol>
