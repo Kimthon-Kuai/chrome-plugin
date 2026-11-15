@@ -269,11 +269,36 @@ async function main() {
     assert(/[\u4e00-\u9fff]/.test(after), `Not Chinese: ${after}`);
     results.push(["TRANSLATE_PAGE", after.slice(0, 50) + "…"]);
 
+    // Bilingual (parallel) view on top of the overwritten page
+    const modeSwitch = await bridge.evaluate(async (id) => {
+      return chrome.tabs.sendMessage(id, { type: "SET_PAGE_MODE", mode: "bilingual" });
+    }, tabId);
+    console.log("SET_PAGE_MODE message:", modeSwitch);
+    assert(modeSwitch?.ok, `Mode switch failed: ${JSON.stringify(modeSwitch)}`);
+    const biState = await page.evaluate(() => ({
+      blocks: document.querySelectorAll("[data-at-bilingual]").length,
+      p1: document.querySelector("#p1").textContent.trim(),
+    }));
+    assert(biState.blocks > 0, "Bilingual blocks missing");
+    console.log("BILINGUAL blocks:", biState.blocks, "|", biState.p1.slice(0, 40));
+    results.push(["BILINGUAL_MODE", `${biState.blocks} blocks`]);
+
+    const modeBack = await bridge.evaluate(async (id) => {
+      return chrome.tabs.sendMessage(id, { type: "SET_PAGE_MODE", mode: "overwrite" });
+    }, tabId);
+    assert(modeBack?.ok, `Switch back failed: ${JSON.stringify(modeBack)}`);
+    const backState = await page.evaluate(() => ({
+      blocks: document.querySelectorAll("[data-at-bilingual]").length,
+      p1: document.querySelector("#p1").textContent.trim(),
+    }));
+    assert(backState.blocks === 0 && backState.p1 !== before, "Switch back to overwrite failed");
+    results.push(["OVERWRITE_MODE", backState.p1.slice(0, 40) + "…"]);
+
+
     // Summarize panel on the same tab
     const sumRes = await bridge.evaluate(async (id) => {
       return chrome.tabs.sendMessage(id, { type: "SUMMARIZE_PAGE" });
-    }, tabId);
-    console.log("SUMMARIZE_PAGE message:", sumRes);
+    }, tabId);    console.log("SUMMARIZE_PAGE message:", sumRes);
     assert(sumRes?.ok, `Summarize page failed: ${JSON.stringify(sumRes)}`);
 
     const panelInfo = await page.evaluate(() => {

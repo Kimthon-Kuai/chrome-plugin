@@ -1,6 +1,7 @@
 const DEFAULTS = {
   sourceLang: "auto",
   targetLang: "auto",
+  pageMode: "overwrite",
 };
 
 const $ = (id) => document.getElementById(id);
@@ -54,6 +55,7 @@ function fillLang(settings) {
 async function loadSettings() {
   const settings = await send("GET_SETTINGS");
   fillLang(settings);
+  $("pageMode").value = settings.pageMode || DEFAULTS.pageMode;
 }
 
 async function saveLang() {
@@ -116,24 +118,54 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("translatePageBtn").addEventListener(
     "click",
     withBusy($("translatePageBtn"), async () => {
-      setStatus($("actionStatus"), "正在翻译页面…");
+      const mode = $("pageMode").value;
+      setStatus(
+        $("actionStatus"),
+        mode === "bilingual" ? "正在生成双语对照…" : "正在翻译页面…"
+      );
       try {
         await saveLang();
-        await sendToActiveTab({ type: "TRANSLATE_PAGE" });
-        setStatus($("actionStatus"), "全页翻译完成", "ok");
+        await send("SAVE_SETTINGS", { settings: { pageMode: mode } });
+        const data = await sendToActiveTab({ type: "TRANSLATE_PAGE", mode });
+        setStatus(
+          $("actionStatus"),
+          data?.mode === "bilingual"
+            ? `双语对照完成（${data.count} 段）`
+            : "全页翻译完成",
+          "ok"
+        );
       } catch (e) {
         setStatus($("actionStatus"), e.message, "err");
       }
     })
   );
 
+  // Switching the mode on an already translated page applies it in place.
+  $("pageMode").addEventListener("change", async () => {
+    const mode = $("pageMode").value;
+    try {
+      await send("SAVE_SETTINGS", { settings: { pageMode: mode } });
+      const data = await sendToActiveTab({ type: "SET_PAGE_MODE", mode });
+      setStatus(
+        $("actionStatus"),
+        data?.applied
+          ? mode === "bilingual"
+            ? "已切换为双语对照"
+            : "已切换为覆盖翻译"
+          : "已保存翻译方式，下次全页翻译生效",
+        data?.applied ? "ok" : ""
+      );
+    } catch (e) {
+      setStatus($("actionStatus"), e.message, "err");
+    }
+  });
+
   $("restorePageBtn").addEventListener(
     "click",
     withBusy($("restorePageBtn"), async () => {
       try {
         await sendToActiveTab({ type: "RESTORE_PAGE" });
-        setStatus($("actionStatus"), "已还原原文", "ok");
-      } catch (e) {
+        setStatus($("actionStatus"), "已还原原文", "ok");      } catch (e) {
         setStatus($("actionStatus"), e.message, "err");
       }
     })

@@ -61,7 +61,7 @@
         <section id="tab-lang" class="tab">
           <header class="page-head">
             <h2>语言设置</h2>
-            <p>设置翻译的源语言与目标语言，支持自动检测。</p>
+            <p>设置翻译的源语言与目标语言，支持自动检测；并选择全页翻译的展示方式。</p>
           </header>
           <div class="card lang-card">
             <label class="field">
@@ -83,12 +83,30 @@
                 <option value="en">英文</option>
               </select>
             </label>
+            <div class="mode-options full" role="radiogroup" aria-label="全页翻译方式">
+              <label class="mode-option">
+                <input type="radio" name="pageMode" value="overwrite" checked />
+                <span class="mode-copy">
+                  <strong>覆盖翻译</strong>
+                  <small>直接用译文替换原文</small>
+                </span>
+              </label>
+              <label class="mode-option">
+                <input type="radio" name="pageMode" value="bilingual" />
+                <span class="mode-copy">
+                  <strong>双语对照</strong>
+                  <small>保留原文，在原文下方显示译文</small>
+                </span>
+              </label>
+            </div>
             <div class="row full">
               <button id="saveLangBtn" class="btn primary" type="button">保存语言</button>
+              <button id="applyPageModeBtn" class="btn ghost" type="button">应用到当前页面</button>
               <p id="langStatus" class="status" role="status"></p>
             </div>
             <p class="hint">
-              源语言或目标语言为「自动」时：根据文本检测源语言，并翻译到另一侧语言。
+              源语言或目标语言为「自动」时：根据文本检测源语言，并翻译到另一侧语言。切换翻译方式后，
+              若当前页面已翻译，点击「应用到当前页面」可原地切换，无需重新调用接口。
             </p>
           </div>
         </section>
