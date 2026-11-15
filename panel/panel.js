@@ -106,7 +106,15 @@ async function applyModeToActiveTab(mode) {
     type: "SET_PAGE_MODE",
     mode,
   });
-  if (!res?.ok) throw new Error(res?.error || "切换失败");
+  if (!res?.ok) {
+    const err = res?.error || "切换失败";
+    if (/Unknown content message/i.test(err)) {
+      throw new Error(
+        "插件后台脚本还是旧版本：请打开 chrome://extensions/ 点击插件卡片的「刷新 ↻」，再按 F5 刷新目标网页"
+      );
+    }
+    throw new Error(err);
+  }
   setStatus(
     $("langStatus"),
     res.data?.applied

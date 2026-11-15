@@ -37,7 +37,15 @@ async function sendToActiveTab(message) {
   }
   await ensureContentReady(tab.id);
   const res = await chrome.tabs.sendMessage(tab.id, message);
-  if (!res?.ok) throw new Error(res?.error || "页面操作失败");
+  if (!res?.ok) {
+    const err = res?.error || "页面操作失败";
+    if (/Unknown content message/i.test(err)) {
+      throw new Error(
+        "插件后台脚本还是旧版本：请打开 chrome://extensions/ 点击插件卡片的「刷新 ↻」，再按 F5 刷新当前网页"
+      );
+    }
+    throw new Error(err);
+  }
   return res.data;
 }
 
