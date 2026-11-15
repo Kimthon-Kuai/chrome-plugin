@@ -22,6 +22,13 @@
   /** @type {Text[]} */
   let translatedNodes = [];
 
+  const PAGE_MODES = ["overwrite", "bilingual"];
+  let pageMode = "overwrite";
+  /** @type {Map<Text, HTMLElement>} */
+  let bilingualBlocks = new Map();
+  /** @type {{ text: string, rect: DOMRect | null } | null} */
+  let lastSelectionInfo = null;
+
   let selectionTimer = null;
   let lastSelection = "";
 
@@ -105,6 +112,14 @@
 
   async function translateSelection(text, anchorRect) {
     removeSelectionPopup();
+    removeSelectionReopen();
+    const rect =
+      anchorRect ||
+      (window.getSelection() && window.getSelection().rangeCount > 0
+        ? window.getSelection().getRangeAt(0).getBoundingClientRect()
+        : null);
+    lastSelectionInfo = { text, rect };
+    if (pageMode === "bilingual") renderSelectionReopen();
     const popup = document.createElement("div");
     popup.id = "at-selection-popup";
     popup.className = "at-loading";
@@ -127,12 +142,22 @@
 
   function onMouseUp(e) {
     if (e.target?.closest?.("#at-selection-popup, #at-summary-panel")) return;
+    if (e.target?.closest?.("#at-sel-reopen")) {
+      reopenSelectionPopup();
+      return;
+    }
+    const quick = readSelection();
+    if (!quick) dismissSelectionPopup();
     clearTimeout(selectionTimer);
     selectionTimer = setTimeout(() => {
-      const sel = window.getSelection();
-      const text = sel ? String(sel.toString()).trim() : "";
-      if (!text || text.length < 2) {
-        if (!e.target?.closest?.("#at-selection-popup")) removeSelectionPopup();
+      const picked = readSelection();
+      if (!picked) {
+        dismissSelectionPopup();
+        return;
+      }
+      const { text } = picked;
+      if (text.length < 2) {
+        dismissSelectionPopup();
         return;
       }
       if (text === lastSelection && document.getElementById("at-selection-popup")) {
@@ -150,12 +175,22 @@
     }, 180);
   }
 
+  function reopenSelectionPopup() {
+    if (!lastSelectionInfo?.text) return;
+    translateSelection(lastSelectionInfo.text, lastSelectionInfo.rect).catch(
+      (err) => {
+        showToast(err?.message || "划词翻译失败");
+      }
+    );
+  }
+
   document.addEventListener("mouseup", onMouseUp);
   document.addEventListener(
     "keydown",
     (e) => {
       if (e.key === "Escape") {
-        removeSelectionPopup();
+        dismissSelectionPopup();
+        removeSelectionReopen();
         closeSummaryPanel();
       }
     },
@@ -183,7 +218,11 @@
     const parent = node.parentElement;
     if (!parent) return false;
     if (SKIP_TAGS.has(parent.tagName)) return false;
-    if (parent.closest("#at-selection-popup, #at-summary-panel, #at-toast")) {
+    if (
+      parent.closest(
+        "#at-selection-popup, #at-summary-panel, #at-toast, #at-sel-reopen"
+      )
+    ) {
       return false;
     }
     if (parent.isContentEditable) return false;
@@ -236,45 +275,103 @@
     return batches;
   }
 
-  async function translatePage() {
+  function applyTranslation(node, translation) {
+    if (translation == null || translation === "") return;
+    if (pageMode === "bilingual") {
+      if (!ensureBilingualBlock(node, translation)) return;
+    } else {
+      node.nodeValue = translation;
+    }
+    if (!translatedNodes.includes(node)) translatedNodes.push(node);
+  }
+
+  function normalizeMode(mode) {
+    return PAGE_MODES.includes(mode) ? mode : "overwrite";
+  }
+
+  async function translatePage(mode = "overwrite") {
     const nodes = collectTextNodes();
     if (!nodes.length) {
       showToast("未找到可翻译文本");
-      return { count: 0 };
+      return { count: 0, mode: normalizeMode(mode) };
     }
 
     // Restore previous before re-translate for clean state
     restorePage(false);
+    pageMode = normalizeMode(mode);
 
     const batches = packBatches(nodes);
     let done = 0;
     setProgress(0.05);
-    showToast(`开始翻译（${nodes.length} 段）…`);
+    showToast(
+      `${pageMode === "bilingual" ? "开始双语对照" : "开始翻译"}（${nodes.length} 段）…`
+    );
 
-    for (const batch of batches) {
-      const texts = batch.map((n) => n.nodeValue);
-      const { translations } = await sendBg("TRANSLATE_BATCH", { texts });
-      batch.forEach((node, i) => {
-        if (!originalText.has(node)) {
-          originalText.set(node, node.nodeValue);
-          translatedNodes.push(node);
-        }
-        if (translations[i] != null && translations[i] !== "") {
-          node.nodeValue = translations[i];
-        }
-      });
-      done += batch.length;
-      setProgress(done / nodes.length);
+    try {
+      for (const batch of batches) {
+        const texts = batch.map((n) => n.nodeValue);
+        const { translations } = await sendBg("TRANSLATE_BATCH", { texts });
+        batch.forEach((node, i) => {
+          if (!originalText.has(node)) {
+            originalText.set(node, node.nodeValue);
+          }
+          applyTranslation(node, translations[i]);
+        });
+        done += batch.length;
+        setProgress(done / nodes.length);
+      }
+    } catch (err) {
+      // Keep partial results usable instead of leaving a half-rendered state
+      setProgress(0);
+      showToast(`翻译中断：${err?.message || err}`, 3200);
+      throw err;
     }
 
-    showToast(`全页翻译完成（${nodes.length} 段）`);
+    showToast(
+      `${
+        pageMode === "bilingual" ? "双语对照已完成" : "全页翻译完成"
+      }（${nodes.length} 段）`
+    );
     setProgress(1);
-    return { count: nodes.length };
+    return { count: nodes.length, mode: pageMode };
+  }
+
+  /** Switch an already translated page between overwrite and bilingual view. */
+  function setPageMode(mode) {
+    const next = normalizeMode(mode);
+    if (!translatedNodes.length) {
+      pageMode = next;
+      return { mode: next, count: 0, applied: false };
+    }
+    pageMode = next;
+    const replaced = new Set();
+    for (const node of translatedNodes) {
+      if (!node.parentNode) continue;
+      if (next === "bilingual") {
+        const block = bilingualBlocks.get(node);
+        if (block && block.classList.contains("at-has-translation")) continue;
+        const text = node.nodeValue;
+        // Collapse duplicates produced by the current overwrite render
+        if (replaced.has(text)) continue;
+        replaced.add(text);
+        ensureBilingualBlock(node, text);
+      } else {
+        const block = bilingualBlocks.get(node);
+        const text = bilingualTextOf(block);
+        removeBilingualBlock(node);
+        if (text) node.nodeValue = text;
+      }
+    }
+    removeSelectionPopup();
+    renderSelectionReopen();
+    showToast(next === "bilingual" ? "已切换到双语对照" : "已切换到覆盖翻译");
+    return { mode: next, count: translatedNodes.length, applied: true };
   }
 
   function restorePage(notify = true) {
     let count = 0;
     for (const node of translatedNodes) {
+      removeBilingualBlock(node);
       const orig = originalText.get(node);
       if (orig != null && node.parentNode) {
         node.nodeValue = orig;
@@ -282,8 +379,129 @@
       }
     }
     translatedNodes = [];
+    bilingualBlocks = new Map();
+    lastSelectionInfo = null;
+    removeSelectionReopen();
     if (notify) showToast(count ? "已还原原文" : "没有可还原的内容");
-    return { count };
+    return { count, mode: pageMode };
+  }
+
+  /* ---------- Bilingual parallel view ---------- */
+
+  // Wrapper inserted after each translated source node in bilingual mode.
+  const BILINGUAL_SELECTOR = "[data-at-bilingual]";
+
+  function bilingualTextOf(block) {
+    return block?.querySelector(".at-bilingual-text")?.textContent || "";
+  }
+
+  /**
+   * Keep the original text node in place and append the translation right
+   * after it, so the source and target are visible together.
+   */
+  function ensureBilingualBlock(node, translation) {
+    if (!node.parentNode || node.parentNode.nodeType !== Node.ELEMENT_NODE) {
+      return null;
+    }
+    if (translation == null || translation === "") return null;
+    let block = bilingualBlocks.get(node);
+    if (block && !block.isConnected) {
+      bilingualBlocks.delete(node);
+      block = null;
+    }
+    if (!block) {
+      block = document.createElement("span");
+      block.className = "at-bilingual";
+      block.setAttribute("data-at-bilingual", "");
+      block.setAttribute("lang", "zh-CN");
+      const text = document.createElement("span");
+      text.className = "at-bilingual-text";
+      block.appendChild(text);
+      node.parentNode.insertBefore(block, node.nextSibling);
+      bilingualBlocks.set(node, block);
+    }
+    const textEl = block.querySelector(".at-bilingual-text");
+    const value = String(translation).trim();
+    if (textEl.textContent !== value) textEl.textContent = value;
+    return block;
+  }
+
+  function removeBilingualBlock(node) {
+    const block = bilingualBlocks.get(node);
+    if (block) {
+      block.remove();
+      bilingualBlocks.delete(node);
+    }
+  }
+
+  /* ---------- Selection helpers for bilingual mode ---------- */
+
+  function selectionSourceNode(selectionNode) {
+    if (!selectionNode) return null;
+    if (selectionNode.nodeType === Node.TEXT_NODE) {
+      return bilingualBlocks.has(selectionNode) ? selectionNode : null;
+    }
+    const el =
+      selectionNode.nodeType === Node.ELEMENT_NODE
+        ? selectionNode
+        : selectionNode.parentElement;
+    const prev = el?.closest?.(BILINGUAL_SELECTOR)?.previousSibling;
+    return prev?.nodeType === Node.TEXT_NODE ? prev : null;
+  }
+
+  /** In bilingual mode the raw selection includes both languages. */
+  function readSelection() {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return null;
+    const text = String(sel.toString()).trim();
+    if (!text) return null;
+    if (pageMode !== "bilingual") return { text };
+    const srcNode = selectionSourceNode(sel.anchorNode);
+    if (srcNode) {
+      const raw = String(srcNode.nodeValue || "");
+      if (raw.includes(text)) return { text, sourceNode: srcNode };
+      // Selections that cross a block boundary yield "source\ntranslation".
+      const firstLine = text.split(/\n/)[0].trim();
+      if (firstLine && raw.includes(firstLine)) {
+        return { text: firstLine, sourceNode: srcNode };
+      }
+    }
+    return { text };
+  }
+
+  function dismissSelectionPopup() {
+    const hadPopup = !!document.getElementById("at-selection-popup");
+    removeSelectionPopup();
+    if (hadPopup) renderSelectionReopen();
+  }
+
+  /** Small "translate original" chip shown after closing the floating popup. */
+  function renderSelectionReopen() {
+    removeSelectionReopen();
+    if (pageMode !== "bilingual" || !lastSelectionInfo?.text) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.id = "at-sel-reopen";
+    btn.textContent = "翻译原文";
+    document.documentElement.appendChild(btn);
+    const rect = lastSelectionInfo.rect;
+    if (rect && (rect.left || rect.top)) {
+      const top = Math.max(8, window.scrollY + rect.bottom + 6);
+      let left = window.scrollX + rect.left;
+      left = Math.max(
+        window.scrollX + 8,
+        Math.min(left, window.scrollX + window.innerWidth - 96)
+      );
+      btn.style.top = `${top}px`;
+      btn.style.left = `${left}px`;
+    } else {
+      btn.style.top = "50vh";
+      btn.style.left = "50vw";
+    }
+  }
+
+  function removeSelectionReopen() {
+    document.getElementById("at-sel-reopen")?.remove();
   }
 
   /* ---------- Summarize ---------- */
@@ -295,6 +513,8 @@
         "script,style,noscript,iframe,svg,#at-selection-popup,#at-summary-panel,#at-toast,.at-progress-bar,nav,footer"
       )
       .forEach((el) => el.remove());
+    // Bilingual view: keep only the original text so summaries read naturally.
+    clone.querySelectorAll("[data-at-bilingual]").forEach((el) => el.remove());
     const text = (clone.innerText || "").replace(/\n{3,}/g, "\n\n").trim();
     return text;
   }
@@ -351,6 +571,18 @@
   }
 
   async function translateSelectionText(text) {
+    if (pageMode === "bilingual") {
+      // Translate the original text (not the already rendered translation).
+      const raw = String(text || "").trim();
+      const src = translatedNodes.find(
+        (n) => String(n.nodeValue || "").trim() === raw
+      );
+      const data = await translateSelection(
+        raw,
+        src ? src.parentElement?.getBoundingClientRect() : null
+      );
+      return { translation: data.translation, sourceText: raw };
+    }
     const trimmed = String(text || "").trim();
     if (!trimmed) throw new Error("没有可翻译的文本");
     const h1 = document.querySelector("h1");
@@ -367,7 +599,9 @@
         case "PING":
           return { pong: true };
         case "TRANSLATE_PAGE":
-          return await translatePage();
+          return await translatePage(message.mode);
+        case "SET_PAGE_MODE":
+          return setPageMode(message.mode);
         case "RESTORE_PAGE":
           return restorePage(true);
         case "SUMMARIZE_PAGE":

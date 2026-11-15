@@ -140,3 +140,78 @@
   transition: width 0.2s ease;
   pointer-events: none;
 }
+
+/* ---------- Bilingual parallel view ---------- */
+
+h1 .at-bilingual,
+h2 .at-bilingual,
+h3 .at-bilingual,
+h4 .at-bilingual,
+h5 .at-bilingual,
+h6 .at-bilingual {
+  font-size: 0.62em;
+  font-weight: 500;
+  line-height: 1.45;
+  margin-top: 4px;
+}
+
+.at-bilingual {
+  display: block;
+  margin: 2px 0 6px;
+  padding: 1px 0 1px 9px;
+  border-left: 3px solid #93c5fd;
+  color: #1d4ed8;
+  font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 0.94em;
+  line-height: 1.55;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: normal;
+  word-break: break-word;
+  opacity: 0.95;
+}
+
+.at-bilingual .at-bilingual-text {
+  display: inline;
+}
+
+/* Inline contexts (links, list markers, table cells) flow with the source. */
+a .at-bilingual,
+button .at-bilingual,
+label .at-bilingual,
+summary .at-bilingual,
+td .at-bilingual,
+th .at-bilingual,
+li > .at-bilingual,
+.breadcrumb .at-bilingual,
+nav .at-bilingual {
+  display: inline;
+  margin: 0 0 0 6px;
+  padding: 0 6px;
+  border-left: 0;
+  border-radius: 4px;
+  background: #eff6ff;
+  font-size: 0.9em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+#at-sel-reopen {
+  position: absolute;
+  z-index: 2147483646;
+  padding: 5px 10px;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1d4ed8;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(21, 32, 51, 0.14);
+}
+
+#at-sel-reopen:hover {
+  background: #eff6ff;
+}
