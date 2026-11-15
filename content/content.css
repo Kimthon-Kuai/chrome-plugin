@@ -1,0 +1,142 @@
+/* AI Translator content UI — prefixed to avoid page collisions */
+
+#at-selection-popup {
+  position: absolute;
+  z-index: 2147483646;
+  max-width: min(360px, 90vw);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #152033;
+  border: 1px solid #d9e0ea;
+  box-shadow: 0 14px 40px rgba(21, 32, 51, 0.18);
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  pointer-events: auto;
+}
+
+#at-selection-popup .at-pop-label {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5b6b7f;
+  margin-bottom: 6px;
+}
+
+#at-selection-popup .at-pop-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#at-selection-popup.at-loading .at-pop-body {
+  color: #5b6b7f;
+}
+
+#at-selection-popup.at-error .at-pop-body {
+  color: #b42318;
+}
+
+#at-toast {
+  position: fixed;
+  z-index: 2147483646;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  max-width: min(420px, 92vw);
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(21, 32, 51, 0.92);
+  color: #fff;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 13px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+#at-toast.at-show {
+  opacity: 1;
+}
+
+#at-summary-panel {
+  position: fixed;
+  z-index: 2147483645;
+  top: 0;
+  right: 0;
+  width: min(380px, 100vw);
+  height: 100vh;
+  background: #f8fafc;
+  color: #152033;
+  border-left: 1px solid #d9e0ea;
+  box-shadow: -12px 0 40px rgba(21, 32, 51, 0.12);
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(105%);
+  transition: transform 0.22s ease;
+}
+
+#at-summary-panel.at-open {
+  transform: translateX(0);
+}
+
+#at-summary-panel .at-sum-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #d9e0ea;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+}
+
+#at-summary-panel .at-sum-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+#at-summary-panel .at-sum-close {
+  border: 1px solid #d9e0ea;
+  background: #fff;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: #5b6b7f;
+}
+
+#at-summary-panel .at-sum-body {
+  padding: 16px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 14px;
+  line-height: 1.65;
+  flex: 1;
+}
+
+#at-summary-panel .at-sum-body.at-muted {
+  color: #5b6b7f;
+}
+
+#at-summary-panel .at-sum-body.at-error {
+  color: #b42318;
+}
+
+.at-progress-bar {
+  position: fixed;
+  z-index: 2147483646;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: linear-gradient(90deg, #60a5fa, #2563eb);
+  transition: width 0.2s ease;
+  pointer-events: none;
+}

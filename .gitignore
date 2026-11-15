@@ -1,0 +1,23 @@
+# Secrets & local env
+.env
+.env.*
+*.pem
+secrets.json
+local.config.js
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build / deps (if added later)
+node_modules/
+dist/
+*.log
+
+# Local Chrome test profile
+.chrome-test-profile/
+.chrome-test-profile-e2e/

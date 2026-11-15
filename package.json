@@ -1,0 +1,15 @@
+{
+  "name": "ai-translator-extension",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chrome MV3 AI translator: full-page, selection, and webpage summary via OpenAI-compatible APIs",
+  "scripts": {
+    "test": "node test/e2e.mjs",
+    "test:e2e": "node test/e2e.mjs"
+  },
+  "keywords": ["chrome-extension", "translator", "openai"],
+  "license": "MIT",
+  "devDependencies": {
+    "puppeteer-core": "^25.17.0"
+  }
+}
