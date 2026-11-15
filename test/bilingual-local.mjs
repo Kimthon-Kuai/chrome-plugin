@@ -345,18 +345,23 @@ async function main() {
       return true;
     });
     assert(spans, "could not build a cross-language selection");
-    await new Promise((r) => setTimeout(r, 350));
-    const selPopup = await page.evaluate(() => {
-      const body = document.querySelector("#at-selection-popup .at-pop-body");
-      return body ? body.textContent.trim() : "";
-    });
-    if (selPopup) {
-      assert(
-        /[\u4e00-\u9fff]/.test(selPopup) && !/[\u4e00-\u9fff].*[A-Za-z]{6,}/.test(selPopup),
-        `cross-language selection should translate the source only: ${selPopup}`
-      );
-    }
-    pass("SELECTION source only", selPopup ? selPopup.slice(0, 24) : "popup pending");
+    const selPopup = await page
+      .waitForFunction(
+        () => {
+          const body = document.querySelector("#at-selection-popup .at-pop-body");
+          const text = body ? body.textContent.trim() : "";
+          return text && text !== "翻译中…" ? text : false;
+        },
+        { timeout: 20000 }
+      )
+      .then((h) => h.jsonValue())
+      .catch(() => "");
+    assert(selPopup, "selection popup never resolved for the cross-language selection");
+    assert(
+      /[\u4e00-\u9fff]/.test(selPopup) && !/[\u4e00-\u9fff].*[A-Za-z]{6,}/.test(selPopup),
+      `cross-language selection should translate the source only: ${selPopup}`
+    );
+    pass("SELECTION source only", selPopup.slice(0, 30));
 
     /* ---------- 6. Summary sidebar while in bilingual mode ---------- */
     await page.keyboard.press("Escape");
