@@ -1,8 +1,6 @@
 const DEFAULTS = {
-  apiKey: "",
-  baseUrl: "https://api.deepseek.com",
-  model: "deepseek-v4-flash",
-  direction: "auto",
+  sourceLang: "auto",
+  targetLang: "auto",
 };
 
 const $ = (id) => document.getElementById(id);
@@ -48,32 +46,23 @@ function setStatus(el, text, kind = "") {
   if (kind) el.classList.add(kind);
 }
 
-function readForm() {
-  return {
-    apiKey: $("apiKey").value.trim(),
-    baseUrl: $("baseUrl").value.trim().replace(/\/+$/, ""),
-    model: $("model").value.trim(),
-    direction: $("direction").value,
-  };
-}
-
-function fillForm(settings) {
-  $("apiKey").value = settings.apiKey || "";
-  $("baseUrl").value = settings.baseUrl || DEFAULTS.baseUrl;
-  $("model").value = settings.model || DEFAULTS.model;
-  $("direction").value = settings.direction || DEFAULTS.direction;
+function fillLang(settings) {
+  $("sourceLang").value = settings.sourceLang || DEFAULTS.sourceLang;
+  $("targetLang").value = settings.targetLang || DEFAULTS.targetLang;
 }
 
 async function loadSettings() {
   const settings = await send("GET_SETTINGS");
-  fillForm(settings);
+  fillLang(settings);
 }
 
-async function saveSettings() {
-  const settings = readForm();
-  if (!settings.baseUrl) throw new Error("Base URL 不能为空");
-  if (!settings.model) throw new Error("模型不能为空");
-  await send("SAVE_SETTINGS", { settings });
+async function saveLang() {
+  await send("SAVE_SETTINGS", {
+    settings: {
+      sourceLang: $("sourceLang").value,
+      targetLang: $("targetLang").value,
+    },
+  });
   setStatus($("saveStatus"), "已保存", "ok");
 }
 
@@ -97,23 +86,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     setStatus($("saveStatus"), e.message, "err");
   }
 
-  $("saveBtn").addEventListener(
+  $("swapLangBtn").addEventListener("click", () => {
+    const src = $("sourceLang").value;
+    const tgt = $("targetLang").value;
+    if (src === "auto" && tgt === "auto") return;
+    $("sourceLang").value = tgt === "auto" ? "auto" : tgt;
+    $("targetLang").value = src === "auto" ? "auto" : src;
+  });
+
+  $("saveLangBtn").addEventListener(
     "click",
-    withBusy($("saveBtn"), async () => {
+    withBusy($("saveLangBtn"), async () => {
       try {
-        await saveSettings();
+        await saveLang();
       } catch (e) {
         setStatus($("saveStatus"), e.message, "err");
       }
     })
   );
 
+  $("openPanelBtn").addEventListener("click", () => {
+    if (chrome.runtime.openOptionsPage) {
+      chrome.runtime.openOptionsPage();
+    } else {
+      chrome.tabs.create({ url: chrome.runtime.getURL("panel/panel.html") });
+    }
+  });
+
   $("translatePageBtn").addEventListener(
     "click",
     withBusy($("translatePageBtn"), async () => {
       setStatus($("actionStatus"), "正在翻译页面…");
       try {
-        await saveSettings();
+        await saveLang();
         await sendToActiveTab({ type: "TRANSLATE_PAGE" });
         setStatus($("actionStatus"), "全页翻译完成", "ok");
       } catch (e) {
@@ -139,7 +144,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     withBusy($("summarizeBtn"), async () => {
       setStatus($("actionStatus"), "正在生成总结…");
       try {
-        await saveSettings();
+        await saveLang();
         await sendToActiveTab({ type: "SUMMARIZE_PAGE" });
         setStatus($("actionStatus"), "总结已显示在页面侧栏", "ok");
       } catch (e) {

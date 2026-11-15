@@ -112,12 +112,12 @@ async function main() {
     const { id: extensionId, ext } = await getExtension(browser);
     console.log("Extension:", ext.name, extensionId);
 
-    // Open popup once to ensure SW is alive, then get worker
-    const popupPage = await browser.newPage();
-    await popupPage.goto(`chrome-extension://${extensionId}/popup/popup.html`, {
+    // Open management panel to ensure SW is alive
+    const panelPage = await browser.newPage();
+    await panelPage.goto(`chrome-extension://${extensionId}/panel/panel.html`, {
       waitUntil: "domcontentloaded",
     });
-    await popupPage.waitForSelector("#apiKey");
+    await panelPage.waitForSelector("#apiKey");
 
     const worker = await getWorker(ext);
 
@@ -127,37 +127,41 @@ async function main() {
       apiKey: API_KEY,
       baseUrl: BASE_URL,
       model: MODEL,
+      sourceLang: "en",
+      targetLang: "zh",
       direction: "en2zh",
     });
     results.push(["SAVE_SETTINGS", "ok"]);
 
-    // Reload popup to pick up settings
-    await popupPage.reload({ waitUntil: "domcontentloaded" });
-    await popupPage.waitForFunction(
+    await panelPage.reload({ waitUntil: "domcontentloaded" });
+    await panelPage.waitForFunction(
       (m) => document.getElementById("model")?.value === m,
       { timeout: 8000 },
       MODEL
     );
-    const keyFilled = await popupPage.$eval("#apiKey", (el) => el.value.length > 0);
-    assert(keyFilled, "API Key not loaded into popup");
-    results.push(["POPUP", "settings loaded"]);
+    const keyFilled = await panelPage.$eval("#apiKey", (el) => el.value.length > 0);
+    assert(keyFilled, "API Key not loaded into panel");
+    results.push(["PANEL", "settings loaded"]);
 
     // TRANSLATE_TEXT via SW globals
     const t1 = await worker.evaluate(async () => {
       const settings = await atGetSettings();
-      const target = atResolveTargetLang(settings.direction, "Hello world");
-      const translation = await atChatCompletion({
+      const pair = atResolveLangPair(settings, "Hello world");
+      const result = await atChatCompletion({
         apiKey: settings.apiKey,
         baseUrl: settings.baseUrl,
         model: settings.model,
         messages: [
-          { role: "system", content: atTranslateSystemPrompt(target) },
+          {
+            role: "system",
+            content: atTranslateSystemPrompt(pair.targetLabel, pair.sourceLabel),
+          },
           { role: "user", content: "Hello world" },
         ],
         temperature: 0.2,
         maxTokens: 64,
       });
-      return { translation, target };
+      return { translation: result.content, target: pair.targetLabel, usage: result.usage };
     });
     console.log("TRANSLATE_TEXT:", t1.translation);
     assert(/[\u4e00-\u9fff]/.test(t1.translation), `Expected Chinese, got: ${t1.translation}`);
@@ -167,9 +171,13 @@ async function main() {
     const t2 = await worker.evaluate(async () => {
       const settings = await atGetSettings();
       const texts = ["Good morning", "Thank you"];
-      const target = atResolveTargetLang(settings.direction, texts[0]);
-      const messages = atBatchTranslateMessages(texts, target);
-      const raw = await atChatCompletion({
+      const pair = atResolveLangPair(settings, texts[0]);
+      const messages = atBatchTranslateMessages(
+        texts,
+        pair.targetLabel,
+        pair.sourceLabel
+      );
+      const result = await atChatCompletion({
         apiKey: settings.apiKey,
         baseUrl: settings.baseUrl,
         model: settings.model,
@@ -177,7 +185,7 @@ async function main() {
         temperature: 0.2,
         maxTokens: 128,
       });
-      return atParseNumberedTranslations(raw, texts.length);
+      return atParseNumberedTranslations(result.content, texts.length);
     });
     console.log("TRANSLATE_BATCH:", t2);
     assert(
@@ -194,7 +202,7 @@ async function main() {
         "This sample page is used to verify full-page translation, selection translation, and webpage summarization features.",
         "Feature one: page translation. Feature two: selection translation. Feature three: page summary.",
       ].join("\n");
-      return atChatCompletion({
+      const result = await atChatCompletion({
         apiKey: settings.apiKey,
         baseUrl: settings.baseUrl,
         model: settings.model,
@@ -206,6 +214,7 @@ async function main() {
         temperature: 0.3,
         maxTokens: 400,
       });
+      return result.content;
     });
     console.log("SUMMARIZE:", t3.slice(0, 180).replace(/\n/g, " "));
     assert(t3.length > 20 && /[\u4e00-\u9fff]/.test(t3), `Bad summary: ${t3}`);

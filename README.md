@@ -16,27 +16,33 @@
 3. 点击「加载已解压的扩展程序」
 4. 选择本仓库根目录
 
-## 配置
+## 配置与管理面板
 
-点击工具栏图标打开 popup：
+- 工具栏 popup：快捷切换源/目标语言，全页翻译 / 总结
+- **管理面板**（popup 内「打开管理面板」，或扩展详情 → 扩展选项）：
+  1. 配置 API Key / Base URL / 模型
+  2. 切换源语言与目标语言
+  3. 查看翻译历史（最近 200 条）
+  4. Token 消耗统计（总量与近 7 日）
 
 | 字段 | 说明 | 示例 |
 |------|------|------|
 | API Key | 服务商密钥 | `sk-...` |
 | Base URL | OpenAI 兼容接口地址 | `https://api.deepseek.com` |
 | 模型 | 模型名称 | `deepseek-v4-flash` |
-| 翻译方向 | 自动 / 中→英 / 英→中 | 自动检测 |
+| 源/目标语言 | 自动 / 中文 / 英文 | 自动检测 |
 
-配置保存在 `chrome.storage.local`，**不会写入仓库文件**。请勿将 API Key 提交到 Git。
+配置、历史与 Token 统计保存在 `chrome.storage.local`，**不会写入仓库文件**。请勿将 API Key 提交到 Git。
 
 ## 项目结构
 
 ```
 ├── manifest.json          # MV3 清单
-├── background.js          # Service Worker（API 请求代理）
-├── popup/                 # 弹窗配置页
+├── background.js          # Service Worker（API / 历史 / Token）
+├── popup/                 # 快捷弹窗
+├── panel/                 # 管理面板（选项页）
 ├── content/               # 内容脚本（划词 / 全页 / 总结 UI）
-├── lib/                   # 共享工具（配置、提示词）
+├── lib/                   # 共享工具（配置、提示词、OpenAI 客户端）
 └── icons/                 # 扩展图标
 ```
 

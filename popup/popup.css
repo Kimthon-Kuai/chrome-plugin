@@ -200,3 +200,24 @@ h1 {
   line-height: 1.45;
   color: var(--muted);
 }
+
+.lang-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: end;
+}
+
+.field.compact {
+  margin-bottom: 0;
+}
+
+.icon-btn {
+  width: 36px;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.compact-card .btn.primary {
+  margin-top: 0;
+}
