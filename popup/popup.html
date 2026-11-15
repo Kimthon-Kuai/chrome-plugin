@@ -45,13 +45,20 @@
 
       <section class="card" aria-labelledby="act-title">
         <h2 id="act-title">当前页面</h2>
+        <div class="field compact mode-field">
+          <span>翻译方式</span>
+          <select id="pageMode">
+            <option value="overwrite">覆盖翻译（仅显示译文）</option>
+            <option value="bilingual">双语对照（保留原文）</option>
+          </select>
+        </div>
         <div class="actions">
           <button id="translatePageBtn" class="btn" type="button">全页翻译</button>
           <button id="restorePageBtn" class="btn ghost" type="button">还原原文</button>
           <button id="summarizeBtn" class="btn" type="button">网页总结</button>
         </div>
         <p id="actionStatus" class="status" role="status" aria-live="polite"></p>
-        <p class="hint">划词翻译：在网页中选中文字即可自动翻译。</p>
+        <p class="hint">划词翻译：在网页中选中文字即可自动翻译。对照模式下选区会同时包含译文，可点「翻译原文」或按 Esc 关闭浮层。</p>
       </section>
 
       <section class="card compact-card">

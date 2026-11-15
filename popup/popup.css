@@ -221,3 +221,7 @@ h1 {
 .compact-card .btn.primary {
   margin-top: 0;
 }
+
+.mode-field {
+  margin-bottom: 10px;
+}

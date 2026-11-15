@@ -5,7 +5,9 @@
   "description": "Chrome MV3 AI translator: full-page, selection, and webpage summary via OpenAI-compatible APIs",
   "scripts": {
     "test": "node test/e2e.mjs",
-    "test:e2e": "node test/e2e.mjs"
+    "test:e2e": "node test/e2e.mjs",
+    "test:bilingual": "node test/bilingual-local.mjs",
+    "test:bilingual:live": "node test/bilingual-local.mjs --live"
   },
   "keywords": ["chrome-extension", "translator", "openai"],
   "license": "MIT",

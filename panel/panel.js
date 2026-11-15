@@ -4,6 +4,7 @@ const DEFAULTS = {
   model: "deepseek-v4-flash",
   sourceLang: "auto",
   targetLang: "auto",
+  pageMode: "overwrite",
 };
 
 const TYPE_LABEL = {
@@ -60,6 +61,69 @@ async function loadSettings() {
   $("model").value = settings.model || DEFAULTS.model;
   $("sourceLang").value = settings.sourceLang || DEFAULTS.sourceLang;
   $("targetLang").value = settings.targetLang || DEFAULTS.targetLang;
+  setPageModeRadio(settings.pageMode || DEFAULTS.pageMode);
+}
+
+function getPageModeRadio() {
+  return (
+    document.querySelector('input[name="pageMode"]:checked')?.value ||
+    DEFAULTS.pageMode
+  );
+}
+
+function setPageModeRadio(mode) {
+  document.querySelectorAll('input[name="pageMode"]').forEach((input) => {
+    input.checked = input.value === mode;
+  });
+}
+
+function setPageMode(mode) {
+  document.querySelectorAll('input[name="pageMode"]').forEach((input) => {
+    input.checked = input.value === mode;
+  });
+  setStatus(
+    $("langStatus"),
+    mode === "bilingual" ? "已选择双语对照，点击保存生效" : "已选择覆盖翻译，点击保存生效"
+  );
+}
+
+/** Push the saved mode to the active tab so it can switch in place. */
+async function applyModeToActiveTab(mode) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id || !/^https?:/i.test(tab.url || "")) {
+    setStatus($("langStatus"), "当前标签页不支持页面翻译", "err");
+    return;
+  }
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ["content/content.js"],
+  });
+  await chrome.scripting.insertCSS({
+    target: { tabId: tab.id },
+    files: ["content/content.css"],
+  });
+  const res = await chrome.tabs.sendMessage(tab.id, {
+    type: "SET_PAGE_MODE",
+    mode,
+  });
+  if (!res?.ok) {
+    const err = res?.error || "切换失败";
+    if (/Unknown content message/i.test(err)) {
+      throw new Error(
+        "插件后台脚本还是旧版本：请打开 chrome://extensions/ 点击插件卡片的「刷新 ↻」，再按 F5 刷新目标网页"
+      );
+    }
+    throw new Error(err);
+  }
+  setStatus(
+    $("langStatus"),
+    res.data?.applied
+      ? mode === "bilingual"
+        ? "当前页面已切换为双语对照"
+        : "当前页面已切换为覆盖翻译"
+      : "已保存，下次全页翻译生效",
+    "ok"
+  );
 }
 
 async function saveApi() {
@@ -78,6 +142,7 @@ async function saveLang() {
   const settings = {
     sourceLang: $("sourceLang").value,
     targetLang: $("targetLang").value,
+    pageMode: getPageModeRadio(),
   };
   await send("SAVE_SETTINGS", { settings });
   setStatus($("langStatus"), "语言设置已保存", "ok");
@@ -206,6 +271,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("swapLangBtn").addEventListener("click", () => {
     swapLang();
     setStatus($("langStatus"), "已互换，点击保存生效");
+  });
+
+  document.querySelectorAll('input[name="pageMode"]').forEach((input) => {
+    input.addEventListener("change", () => setPageMode(input.value));
+  });
+
+  $("applyPageModeBtn").addEventListener("click", async () => {
+    try {
+      await applyModeToActiveTab(getPageModeRadio());
+    } catch (e) {
+      setStatus($("langStatus"), e.message, "err");
+    }
   });
 
   $("clearStatsBtn").addEventListener("click", async () => {
