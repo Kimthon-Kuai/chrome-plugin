@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="AI Translator — Chrome 浏览器 AI 翻译插件。全页翻译、划词翻译、网页总结，兼容 OpenAI 协议。"
+    />
+    <title>AI Translator — 让网页用你的语言说话</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">跳到正文</a>
+
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="logo" href="#top" aria-label="AI Translator 首页">
+          <span class="logo-mark" aria-hidden="true">译</span>
+          <span class="logo-text">AI Translator</span>
+        </a>
+        <nav class="nav" aria-label="页面导航">
+          <a href="#intro">介绍</a>
+          <a href="#features">功能</a>
+          <a href="#install">安装</a>
+        </nav>
+        <a class="btn btn-sm" href="#install">开始安装</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top">
+        <div class="hero-bg" aria-hidden="true"></div>
+        <div class="wrap hero-grid">
+          <div class="hero-copy">
+            <p class="brand-lockup">AI Translator</p>
+            <h1 class="hero-title">
+              让网页<br />
+              <span class="hero-accent">用你的语言说话</span>
+            </h1>
+            <p class="hero-lead">
+              Chrome 端 AI 翻译插件：全页翻译、划词即译、网页总结。兼容 OpenAI
+              协议，密钥与接口由你掌控。
+            </p>
+            <div class="hero-cta">
+              <a class="btn" href="#install">安装扩展</a>
+              <a class="btn btn-ghost" href="#features">了解功能</a>
+            </div>
+          </div>
+
+          <div class="hero-stage" aria-hidden="true">
+            <div class="browser">
+              <div class="browser-bar">
+                <span></span><span></span><span></span>
+                <div class="browser-url">example.com / article</div>
+              </div>
+              <div class="browser-body">
+                <p class="line line-en is-active">
+                  Artificial intelligence is reshaping how we read the web.
+                </p>
+                <p class="line line-zh">
+                  人工智能正在重塑我们阅读网页的方式。
+                </p>
+                <div class="select-pop">
+                  <span class="select-label">划词翻译</span>
+                  <span class="select-text" data-swap>reshaping → 重塑</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="intro" id="intro">
+        <div class="wrap intro-grid">
+          <h2 class="section-title">为双语阅读而生</h2>
+          <p class="intro-text">
+            AI Translator
+            把翻译能力嵌进浏览流：不必复制到别处，不必切换标签页。选中即译，整页可换，长文可先看总结。接口遵循
+            OpenAI Chat Completions，可对接 DeepSeek 等兼容服务。
+          </p>
+          <ul class="intro-points">
+            <li>
+              <strong>自备密钥</strong>
+              <span>API Key 与 Base URL 本地保存，不经过第三方中转。</span>
+            </li>
+            <li>
+              <strong>中英互译</strong>
+              <span>支持自动检测，也可固定源语言与目标语言。</span>
+            </li>
+            <li>
+              <strong>管理面板</strong>
+              <span>历史记录与 Token 消耗一目了然。</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="features" id="features">
+        <div class="wrap">
+          <header class="features-head">
+            <h2 class="section-title">核心功能</h2>
+            <p class="section-lead">三件事，覆盖日常浏览的翻译需求。</p>
+          </header>
+        </div>
+
+        <article class="feature feature-a reveal">
+          <div class="wrap feature-inner">
+            <div class="feature-copy">
+              <p class="feature-kicker">全页面翻译</p>
+              <h3>一键换上整页译文</h3>
+              <p>
+                对当前页可见文本批量翻译，保留原有结构。译完可随时还原原文，适合快速通读外文站点。
+              </p>
+            </div>
+            <div class="feature-visual" aria-hidden="true">
+              <div class="mock-page">
+                <div class="mock-bar"></div>
+                <div class="mock-lines">
+                  <span class="w80"></span>
+                  <span class="w60"></span>
+                  <span class="w90"></span>
+                  <span class="w50"></span>
+                </div>
+                <div class="mock-badge">已翻译</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature feature-b reveal">
+          <div class="wrap feature-inner reverse">
+            <div class="feature-copy">
+              <p class="feature-kicker">划词翻译</p>
+              <h3>选中文字，译文贴边出现</h3>
+              <p>
+                在页面上划取词句，浮层即时给出译文。适合查词、核对术语，不打断阅读节奏。
+              </p>
+            </div>
+            <div class="feature-visual" aria-hidden="true">
+              <div class="mock-select">
+                <p>
+                  The system <mark>preserves meaning</mark> while adapting tone.
+                </p>
+                <div class="mock-tip">
+                  <span>翻译</span>
+                  <strong>保留原意</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="feature feature-c reveal">
+          <div class="wrap feature-inner">
+            <div class="feature-copy">
+              <p class="feature-kicker">网页总结</p>
+              <h3>先看要点，再决定精读</h3>
+              <p>
+                提炼页面主旨与要点列表，侧栏呈现中文摘要。长文、新闻、文档页都能先把握结构。
+              </p>
+            </div>
+            <div class="feature-visual" aria-hidden="true">
+              <div class="mock-summary">
+                <div class="mock-summary-head">网页总结</div>
+                <ul>
+                  <li>总体结论：……</li>
+                  <li>关键论点与事实</li>
+                  <li>可忽略的页脚导航噪声</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="install" id="install">
+        <div class="wrap">
+          <header class="install-head">
+            <h2 class="section-title">安装步骤</h2>
+            <p class="section-lead">
+              当前以 Chrome 开发者模式加载未打包扩展。完成下列四步即可使用。
+            </p>
+          </header>
+
+          <ol class="steps">
+            <li class="step reveal">
+              <span class="step-num" aria-hidden="true">1</span>
+              <div>
+                <h3>打开扩展管理页</h3>
+                <p>
+                  在 Chrome 地址栏访问
+                  <code>chrome://extensions/</code>
+                </p>
+              </div>
+            </li>
+            <li class="step reveal">
+              <span class="step-num" aria-hidden="true">2</span>
+              <div>
+                <h3>开启开发者模式</h3>
+                <p>打开页面右上角的「开发者模式」开关。</p>
+              </div>
+            </li>
+            <li class="step reveal">
+              <span class="step-num" aria-hidden="true">3</span>
+              <div>
+                <h3>加载已解压的扩展程序</h3>
+                <p>点击「加载已解压的扩展程序」，选择本项目根目录。</p>
+              </div>
+            </li>
+            <li class="step reveal">
+              <span class="step-num" aria-hidden="true">4</span>
+              <div>
+                <h3>填写 API 并开始翻译</h3>
+                <p>
+                  打开管理面板，配置 API Key、Base URL
+                  与模型；之后即可全页翻译、划词或总结。
+                </p>
+              </div>
+            </li>
+          </ol>
+
+          <div class="install-note">
+            <p>
+              提示：密钥仅保存在浏览器本地存储。兼容任意 OpenAI 协议接口，例如
+              DeepSeek（<code>https://api.deepseek.com</code>）。
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <div class="footer-brand">
+          <span class="logo-mark" aria-hidden="true">译</span>
+          <div>
+            <strong>AI Translator</strong>
+            <p>Chrome AI 翻译插件</p>
+          </div>
+        </div>
+        <p class="footer-meta">本地配置 · 中英互译 · Manifest V3</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
